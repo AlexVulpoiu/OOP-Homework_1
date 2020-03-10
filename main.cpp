@@ -9,9 +9,9 @@ private:
     int numarator, numitor;
 
 public:
-    fractie(int N = 0, int n = 0);      ///constructor de initializare
-    fractie(const fractie &f);          ///constructor de copiere
-    ~fractie();                         ///destructor
+    explicit fractie(int N = 0, int n = 1);      ///constructor de initializare
+    fractie(const fractie &f);                   ///constructor de copiere
+    ~fractie();                                  ///destructor
 
     void setare_numarator(int n);
     int furnizare_numarator();
@@ -23,30 +23,25 @@ public:
 
     void afisare();
 
-    friend fractie operator +(fractie p, fractie q);
-    friend fractie operator -(fractie p, fractie q);
-    friend fractie operator *(fractie p, fractie q);
-    friend fractie operator /(fractie p, fractie q);
+    friend fractie operator +(const fractie &p, const fractie &q);
+    friend fractie operator -(const fractie &p, const fractie &q);
+    friend fractie operator *(const fractie &p, const fractie &q);
+    friend fractie operator /(const fractie &p, const fractie &q);
 
-    friend fractie operator *(fractie p, int q);
+    friend fractie operator *(const fractie &p, int q);
 
     friend istream &operator >>(istream &read, fractie &f);
-    friend ostream &operator <<(ostream &write, fractie f);
-
-    void citire(int n, fractie f[1000]);
-    void afisare(int n, fractie f[1000]);
+    friend ostream &operator <<(ostream &write, const fractie &f);
 };
 
-fractie::fractie(int N, int n)          ///initializare
-{
-    this->setare_numarator(N);
-    this->setare_numitor(n);
-}
+fractie::fractie(int N, int n): numarator{N}, numitor{n} {}       ///initializare
+
 fractie::fractie(const fractie &f)      ///copiere
 {
     numarator = f.numarator;
     numitor = f.numitor;
 }
+
 fractie::~fractie()                     ///distrugere
 {
     cout << "distrugere obiect ";
@@ -57,6 +52,7 @@ void fractie::setare_numarator(int n)
 {
     numarator = n;
 }
+
 int fractie::furnizare_numarator()
 {
     return numarator;
@@ -66,6 +62,7 @@ void fractie::setare_numitor(int n)
 {
     numitor = n;
 }
+
 int fractie::furnizare_numitor()
 {
     return numitor;
@@ -104,32 +101,35 @@ void fractie::afisare()
         cout << numarator << "/" << numitor << "\n";
 }
 
-fractie operator +(fractie p, fractie q)
+fractie operator +(const fractie &p, const fractie &q)
 {
     fractie f(p.numarator * q.numitor + q.numarator * p.numitor, p.numitor * q.numitor);
     f.simplificare();
     return f;
 }
-fractie operator -(fractie p, fractie q)
+
+fractie operator -(const fractie &p, const fractie &q)
 {
     fractie f(p.numarator * q.numitor - q.numarator * p.numitor, p.numitor * q.numitor);
     f.simplificare();
     return f;
 }
-fractie operator *(fractie p, fractie q)
+
+fractie operator *(const fractie &p, const fractie &q)
 {
     fractie f(p.numarator * q.numarator, p.numitor * q.numitor);
     f.simplificare();
     return f;
 }
-fractie operator /(fractie p, fractie q)
+
+fractie operator /(const fractie &p, const fractie &q)
 {
     fractie f(p.numarator * q.numitor, p.numitor * q.numarator);
     f.simplificare();
     return f;
 }
 
-fractie operator *(fractie p, int q)
+fractie operator *(const fractie &p, int q)
 {
     fractie f(p.numarator * q, p.numitor);
     f.simplificare();
@@ -139,11 +139,22 @@ fractie operator *(fractie p, int q)
 istream &operator >>(istream &read, fractie &f)
 {
     read >> f.numarator >> f.numitor;
+    f.simplificare();
     return read;
 }
-ostream &operator <<(ostream &write, fractie f)
+
+ostream &operator <<(ostream &write, const fractie &f)
 {
-    write << f.numarator << "/" << f.numitor;
+    if(f.numitor == 1)
+        write << f.numarator << "\n";
+    else
+        if(f.numitor == -1)
+            write << -f.numarator << "\n";
+        else
+            if(f.numitor < 0)
+                write << -f.numarator << "/" << -f.numitor << "\n";
+            else
+                write << f.numarator << "/" << f.numitor;
     return write;
 }
 
@@ -156,10 +167,10 @@ void citire(int n, fractie f[1000])
             cout << "Dati coeficientul ecuatiei sub forma 'numarator numitor', cu numitorul diferit de 0: ";
         else
             cout << "Dati rezultatul ecuatiei sub forma 'numarator numitor', cu numitorul diferit de 0: ";
-        operator>>(cin, f[i]);
-        f[i].simplificare();
+        cin >> f[i];
     }
 }
+
 void afisare(int n, fractie f[1000])
 {
     int i;
@@ -168,24 +179,35 @@ void afisare(int n, fractie f[1000])
         f[i].afisare();
 }
 
-fractie det, dx, dy, x, y, f[6];
-
 int main()
 {
+    fractie det, dx, dy, f[6];
+
     citire(6, f);
 
-    det = operator -(operator *(f[0], f[4]), operator *(f[1], f[3]));
-    dx = operator -(operator *(f[2], f[4]), operator *(f[1], f[5]));
-    dy = operator -(operator *(f[0], f[5]), operator *(f[2], f[1]));
+    det = f[0] * f[4] - f[1] * f[3];
+    dx = f[2] * f[4] - f[1] * f[5];
+    dy = f[0] * f[5] - f[2] * f[3];
 
     if(det.furnizare_numarator() != 0)
     {
-        x = operator /(dx, det);
-        y = operator /(dy, det);
-
-        x.afisare();
-        y.afisare();
+        cout << "x = " << dx / det << "\n";
+        cout << "y = " << dy / det << "\n";
     }
+    else
+        if(f[0].furnizare_numarator() != 0 || f[3].furnizare_numarator() != 0)
+            if(dy.furnizare_numarator() == 0)
+                cout << "sistemul are o infinitate de solutii\n";
+            else
+                cout << "sistemul este incompatibil\n";
+        else
+            if(f[1].furnizare_numarator() != 0 || f[4].furnizare_numarator() != 0)
+                if(dx.furnizare_numarator() == 0)
+                    cout << "sistemul are o infinitate de solutii\n";
+                else
+                    cout << "sistemul este incompatibil\n";
+            else
+                cout << "sistemul este incompatibil\n";
 
     return 0;
 }
